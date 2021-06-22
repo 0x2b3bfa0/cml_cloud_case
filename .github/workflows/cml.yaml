@@ -24,44 +24,33 @@ jobs:
           --cloud-hdd-size 64 \
           --labels=cml-runner
 
-  run:
+  model-training:
     needs: deploy-runner
-    runs-on: [self-hosted,cml-runner]
+    runs-on: [self-hosted, cml-runner]
     container: 
-      image: docker://dvcorg/cml
+      image: docker://spr3n/torch:latest
       options: --gpus all
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
 
-    - uses: actions/setup-python@v2
-      with:
-        python-version: '3.6'
-
-    - name: cml
-      env:
-        repo_token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-      run: |
-        apt-get update -y
-        apt install imagemagick -y
-        pip install -r requirements.txt
-        
-        # DVC stuff
-        git fetch --prune
-        dvc repro
-        
-        echo "# Style transfer" >> report.md
-        git show origin/master:final_owl.png > master_owl.png
-        convert +append final_owl.png master_owl.png out.png
-        convert out.png -resize 75%  out_shrink.png
-        echo "### Workspace vs. Main" >> report.md
-        cml-publish out_shrink.png --md --title 'compare' >> report.md
-        
-        echo "## Training metrics" >> report.md
-        dvc params diff master --show-md >> report.md
-        
-        echo >> report.md
-        echo "## GPU info" >> report.md
-        cat gpu_info.txt >> report.md
-        
-        cml-send-comment report.md 
+      - name: cml
+        env:
+          REPO_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+          AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }} 
+        run: |
+          # DVC stuff
+          git fetch --prune
+          dvc init
+          dvc repro
+          /opt/conda/bin/python examples/synthetic_s3.py
+          
+          echo "# 3D Convolutional Net" >> report.md
+          # Does not see images saved by `examples/synthetic_s3.py`
+          echo $(ls ./examples) 
+          cml-publish examples/loss.png --md >> report.md
+          cml-send-comment report.md 
