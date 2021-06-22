@@ -1,29 +1,29 @@
 on: [push, workflow_dispatch]
 
 jobs:
-  #deploy-runner:
-  #  runs-on: ubuntu-latest
-  #  steps:
-  #    - uses: actions/checkout@v2
-  #
-  #    - uses: iterative/setup-cml@v1
-  #
-  #    - name: deploy
-  #       shell: bash
-  #      env:
-  #        REPO_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-  #        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  #        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  #      run: |
-  #        cml-runner \
-  #        --cloud aws \
-  #        --cloud-region us-west \
-  #        --cloud-type=g3.4xlarge \
-  #        --cloud-hdd-size 64 \ 
-  #        --labels=cml-runner
+  deploy-runner:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+  
+      - uses: iterative/setup-cml@v1
+  
+      - name: deploy
+         shell: bash
+        env:
+          REPO_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          cml-runner \
+          --cloud aws \
+          --cloud-region us-west \
+          --cloud-type=g3.4xlarge \
+          --cloud-hdd-size 64 \ 
+          --labels=cml-runner
 
   model-training:
-    # needs: deploy-runner
+    needs: deploy-runner
     runs-on: self-hosted
     container: 
       image: docker://spr3n/torch:latest
