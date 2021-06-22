@@ -24,7 +24,7 @@ jobs:
 
   model-training:
     # needs: deploy-runner
-    runs-on: [self-hosted, cml-runner]
+    runs-on: self-hosted
     container: 
       image: docker://spr3n/torch:latest
       options: --gpus all
